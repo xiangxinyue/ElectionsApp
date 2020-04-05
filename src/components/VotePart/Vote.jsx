@@ -4,22 +4,16 @@ import Position from "./Position";
 import VoteDone from "./VoteDone";
 import ListCandidates from "./ListCandidates";
 import { getPositions, getCandidateList } from "../helper";
-import { reelectedPositions } from "../constants";
 import {
   Grid,
   Button,
   Progress,
   Divider,
   Loader,
-  Dimmer,
+  Dimmer
 } from "semantic-ui-react";
 import firebase from "firebase/app";
 import "firebase/firestore";
-
-const VOTE_METHOD = {
-  RADIO: "radio",
-  RATE: "rate",
-};
 
 const VoteHeader = style.h1`
   font-size: 80px !important;
@@ -52,9 +46,7 @@ class Vote extends Component {
       positions: {},
       candidates: {},
       redirect: false,
-      loading: true,
-      reelect: true,
-      voteMethod: VOTE_METHOD.RATE,
+      loading: true
     };
   }
 
@@ -69,23 +61,13 @@ class Vote extends Component {
   initVote = async () => {
     // Initialize user’s vote to have all positions set to empty strings
     // The empty strings will eventually contain the selected candidate’s name
-    const { reelect } = this.state;
-    const positions = reelect ? reelectedPositions : await getPositions();
+    const positions = await getPositions();
     let votes = {};
-    positions.forEach(function (currPosition) {
-      reelect
-        ? (votes = {
-            ...votes,
-            [currPosition]: {
-              1: null,
-              2: null,
-              3: null,
-            },
-          })
-        : (votes = {
-            ...votes,
-            [currPosition]: "",
-          });
+    positions.forEach(function(currPosition) {
+      votes = {
+        ...votes,
+        [currPosition]: ""
+      };
     });
     this.setState({ votes, positions });
   };
@@ -95,33 +77,26 @@ class Vote extends Component {
     this.setState({ candidates });
   };
 
-  updateVote = (card) => {
+  updateVote = card => {
     const { position, candidateName } = card;
     const { votes } = this.state;
     this.setState({
       votes: {
         ...votes,
-        [position]: candidateName,
-      },
+        [position]: candidateName
+      }
     });
   };
 
   renderPositions = () => {
-    const { positions, reelect, voteMethod } = this.state;
-    const positionHasCandidates = reelect
-      ? reelectedPositions.length
-      : positions.length;
-
-    if (positionHasCandidates) {
-      const allPositions = reelect ? reelectedPositions : positions;
-      return allPositions.map((currPosition) => [
+    const { positions } = this.state;
+    if (positions.length) {
+      return positions.map(currPosition => [
         <Position key={currPosition} name={currPosition} />,
         <ListCandidates
           key={"candidatesFor" + currPosition}
           updateVote={this.updateVote}
           position={currPosition}
-          reelect={reelect}
-          voteMethod={voteMethod}
         />,
         <DividerPadded />
       ]);
@@ -130,7 +105,7 @@ class Vote extends Component {
 
   validVote = () => {
     const { votes } = this.state;
-    let valid = Object.keys(votes).every(function (position) {
+    let valid = Object.keys(votes).every(function(position) {
       const currVote = votes[position];
       return currVote.length > 1;
     });
@@ -160,7 +135,7 @@ class Vote extends Component {
       .child("voters")
       .orderByChild("email")
       .equalTo(email)
-      .once("value", (snapshot) => {
+      .once("value", snapshot => {
         const validatedVoter = snapshot.numChildren();
         if (validatedVoter) {
           // If voter is within the voters database, update voter with their votes
@@ -179,7 +154,7 @@ class Vote extends Component {
     const { votes } = this.state;
     const increment = firebase.firestore.FieldValue.increment(1);
 
-    await Object.keys(votes).forEach((position) => {
+    await Object.keys(votes).forEach(position => {
       let vountCount = {};
       const candidateName = votes[position];
       vountCount[`${candidateName}.numOfVotes`] = increment;
@@ -231,7 +206,7 @@ class Vote extends Component {
                   onClick={this.handleSubmit}
                 >
                   Submit
-                </SubmitButton>,
+                </SubmitButton>
               ]}
         </Grid.Column>
       </Grid>
